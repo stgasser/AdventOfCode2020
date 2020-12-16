@@ -1,6 +1,3 @@
-import numpy as np
-
-
 class Rule:
     def __init__(self, s: str):
         self.name, ranges = s.strip().split(': ')
@@ -46,22 +43,30 @@ def part2(args):
             else:
                 invalid.add(i)
                 break
-    correct = np.zeros((len(myticket), len(rules)))
-    for i, ticket in enumerate(tickets):
-        if i in invalid:
-            continue
-        for fnr, field in enumerate(ticket):
-            for rnr, rule in enumerate(rules):
-                if rule.isvalid(field):
-                    correct[fnr, rnr] += 1
+
+    correct = dict()
+    # which rules are correct for which fields off all tickets
+    for rnr, rule in enumerate(rules):
+        for fnr in range(len(myticket)):
+            for i, ticket in enumerate(tickets):
+                if i in invalid:
+                    continue
+                if not rule.isvalid(ticket[fnr]):
+                    break
+            else:
+                correct[rnr] = correct.get(rnr, set()) | {fnr}
+
+    # Rule:Field
     taken = dict()
     prod = 1
-    for _, rnr in sorted([((correct[:, rnr] == len(tickets) - len(invalid)).sum(), rnr) for rnr in range(len(rules))]):
-        for available in np.argwhere(correct[:, rnr] == len(tickets) - len(invalid)):
-            if available[0] not in taken.values():
-                taken[rnr] = available[0]
+    # check the rule with the least amount of validities for all tickets first
+    # for this example this works but it is greedy and doesn't check all solutions
+    for rnr in sorted(correct, key=lambda k: len(correct[k])):
+        for available in correct[rnr]:
+            if available not in taken.values():
+                taken[rnr] = available
                 if rules[rnr].name.startswith('departure'):
-                    prod *= myticket[available[0]]
+                    prod *= myticket[available]
     return prod
 
 
