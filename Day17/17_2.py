@@ -1,11 +1,10 @@
-import numpy as np
 from itertools import product
 from collections import Counter
 
 
 def parse_input(filename):
-    seats = np.loadtxt(filename, dtype=np.uint8, converters={0: lambda x: list(x)}, comments='-')
-    return seats == ord('#')
+    with open(filename) as f:
+        return {(i, j) for j, line in enumerate(f.read().splitlines()) for i, c in enumerate(line) if c == '#'}
 
 
 def get_dir(dim):
@@ -16,7 +15,7 @@ def get_dir(dim):
 
 
 def part1(initial, dim=3):
-    cubes = {(pos[0], pos[1]) + (1,) * (dim - len(pos)) for pos in np.argwhere(initial)}
+    cubes = {(pos[0], pos[1]) + (1,) * (dim - len(pos)) for pos in initial}
     dirs = set(get_dir(dim))
     for _ in range(6):
         neighbor_cnt = Counter(tuple(c + d for c, d in zip(pos, ds)) for pos in cubes for ds in dirs)
