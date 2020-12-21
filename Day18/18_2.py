@@ -1,22 +1,21 @@
 def parse_input(filename):
     with open(filename) as f:
-        return [list(line.replace(' ', '')) for line in f.read().splitlines()]
+        return [line.replace(' ', '') for line in f.read().splitlines()]
 
 
 def part1(equations):
     def evaluate(eq):
         stack = list()
         last = ''
-        while len(eq) > 0:
-            op = eq.pop(0)
+        op = next(eq, None)
+        while op is not None:
             if op in {'+', '*'}:
                 pass
             elif op == '(':
-                evaluate(eq)
+                op = evaluate(eq)
                 continue
             elif op == ')':
-                eq.insert(0, stack[0])
-                return
+                break
             else:
                 stack.append(int(op))
             if last == '+':
@@ -24,21 +23,22 @@ def part1(equations):
             elif last == '*':
                 stack.append(stack.pop() * stack.pop())
             last = op
+            op = next(eq, None)
         return stack[0]
 
-    return sum([evaluate(eq.copy()) for eq in equations])
+    return sum([evaluate(iter(eq)) for eq in equations])
 
 
 def part2(equations):
     def evaluate(eq):
         stack = list()
         last = ''
-        while len(eq) > 0:
-            op = eq.pop(0)
+        op = next(eq, None)
+        while op is not None:
             if op in {'+', '*'}:
                 pass
             elif op == '(':
-                eq.insert(0, evaluate(eq))
+                op = evaluate(eq)
                 continue
             elif op == ')':
                 break
@@ -49,11 +49,12 @@ def part2(equations):
             elif last == '*' and len(stack) > 2:  # can only multiply if 2 finished values on the stack
                 stack.insert(0, stack.pop(0) * stack.pop(0))
             last = op
+            op = next(eq, None)
         if len(stack) == 2:
             stack.insert(0, stack.pop(0) * stack.pop(0))
         return stack[0]
 
-    return sum([evaluate(eq.copy()) for eq in equations])
+    return sum([evaluate(iter(eq)) for eq in equations])
 
 
 if __name__ == '__main__':

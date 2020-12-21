@@ -7,16 +7,25 @@ def part1(equations):
     def evaluate(eq):
         stack = list()
         last = ''
-        while len(eq) > 0:
-            op = eq.pop(0)
+        i = 0
+        while i < len(eq):
+            op = eq[i]
             if op in {'+', '*'}:
                 pass
             elif op == '(':
-                evaluate(eq)
-                continue
+                bcnt = 1
+                j = i + 1
+                while bcnt > 0:
+                    if eq[j] == '(':
+                        bcnt += 1
+                    elif eq[j] == ')':
+                        bcnt -= 1
+                    j += 1
+                j -= 1
+                stack.append(evaluate(eq[i + 1:j]))
+                i = j
             elif op == ')':
-                eq.insert(0, stack[0])
-                return
+                raise NotImplementedError('Should never go here')
             else:
                 stack.append(int(op))
             if last == '+':
@@ -24,6 +33,7 @@ def part1(equations):
             elif last == '*':
                 stack.append(stack.pop() * stack.pop())
             last = op
+            i += 1
         return stack[0]
 
     return sum([evaluate(eq.copy()) for eq in equations])
@@ -33,22 +43,33 @@ def part2(equations):
     def evaluate(eq):
         stack = list()
         last = ''
-        while len(eq) > 0:
-            op = eq.pop(0)
+        i = 0
+        while i < len(eq):
+            op = eq[i]
             if op in {'+', '*'}:
                 pass
             elif op == '(':
-                eq.insert(0, evaluate(eq))
-                continue
+                bcnt = 1
+                j = i + 1
+                while bcnt > 0:
+                    if eq[j] == '(':
+                        bcnt += 1
+                    elif eq[j] == ')':
+                        bcnt -= 1
+                    j += 1
+                j -= 1
+                stack.append(evaluate(eq[i + 1:j]))
+                i = j
             elif op == ')':
-                break
+                raise NotImplementedError('Should never go here')
             else:
                 stack.append(int(op))
             if last == '+':
                 stack.append(stack.pop() + stack.pop())
-            elif last == '*' and len(stack) > 2:  # can only multiply if 2 finished values on the stack
+            elif last == '*' and len(stack) > 2:  # can only multipy if 2 finished values on the stack
                 stack.insert(0, stack.pop(0) * stack.pop(0))
             last = op
+            i += 1
         if len(stack) == 2:
             stack.insert(0, stack.pop(0) * stack.pop(0))
         return stack[0]
