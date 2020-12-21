@@ -1,6 +1,4 @@
-from itertools import product
-
-
+import re
 def parse_input(filename):
     with open(filename) as f:
         rules_txt, msgs_txt = f.read().split("\n\n")
@@ -16,33 +14,38 @@ def parse_input(filename):
         return rules, msgs_txt.splitlines()
 
 
-def gen(rule, rules):
-    if type(rule) == str:
-        return set(rule)
+def gen(ruleid, rules):
+    if type(rules[ruleid]) == str:
+        return rules[ruleid]
     else:
-        ret = set()
-        for rule_seq in rule:
-            tmp = tuple(gen(rules[r], rules) for r in rule_seq)
-            ret = ret | set(''.join(tpl) for tpl in product(*tmp))
-        return ret
+        ret = []
+        for rule_seq in rules[ruleid]:
+            ret.append(''.join(gen(rule, rules) for rule in rule_seq))
+        return '(' +'|'.join(ret)+')'
 
 
 def part1(rules, msgs):
-    possible_msgs = gen(rules[0], rules)
-    return sum(msg in possible_msgs for msg in msgs)
+    cnt = 0
+    pattern = gen(0, rules)
+    prog = re.compile(pattern)
+    for msg in msgs:
+        if prog.fullmatch(msg):
+            cnt += 1
+    return cnt
 
 
 def part2(rules, msgs):
-    thirtyone = gen(rules[31], rules)  # luckily mutually exclusive
-    fortytwo = gen(rules[42], rules)
+    # since a^n b^n is not regular it cant be done with regex :-(
+    thirtyone = re.compile(gen(31, rules))
+    fortytwo = re.compile(gen(42, rules))
     cnt = 0
     for msg in msgs:
         tocnt = 0
-        while msg[-8:] in thirtyone:
+        while thirtyone.fullmatch(msg[-8:]):
             tocnt += 1
             msg = msg[:-8]
         ftcnt = 0
-        while len(msg) > 0 and msg[:8] in fortytwo:
+        while len(msg) > 0 and fortytwo.fullmatch(msg[:8]):
             msg = msg[8:]
             ftcnt += 1
         if len(msg) == 0 and ftcnt - tocnt >= 1 and tocnt >= 1 and ftcnt >= 2:
